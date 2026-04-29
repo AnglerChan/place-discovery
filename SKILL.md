@@ -1,6 +1,6 @@
 ---
 name: place-discovery
-description: Discover local places and route nodes with AMap Web Service POI data plus web-search evidence. Use when Codex needs to find 城市地点, 地方产业空间, 教育训练空间, 城市系统, 基础设施景观, 低商业探索地点, AMap POI enrichment, or produce a magazine-style 城市地点介绍文章/地点路线 for a city, district, coordinate area, or travel route.
+description: Discover local places and route nodes with AMap Web Service POI data plus web-search evidence. Use when Codex needs to find 城市地点, 地方产业空间, 教育训练空间, 城市系统, 基础设施景观, 低商业探索地点, AMap POI enrichment, or produce a concrete-place-driven magazine-style 城市地点介绍文章/地点路线 for a city, district, coordinate area, or travel route.
 ---
 
 # Place Discovery
@@ -23,11 +23,13 @@ Accept free-form Chinese or English requests. Internally identify the target cit
 
 ## Output Format
 
-最终结果必须是一篇中文 Markdown 杂志介绍文章。不要在最终结果中追加 JSON、YAML、代码块、字段字典、机器可读 schema 或其他数据结构。
+最终结果必须是一篇中文 Markdown 杂志介绍文章，并且必须和具体地点结合。不要在最终结果中追加 JSON、YAML、代码块、字段字典、机器可读 schema 或其他数据结构。
 
 文章应像城市杂志、地方观察专栏或专题导览，而不是数据库清单、攻略表格、评分报告或 POI 导出。可以有标题、导语、分节小标题、路线段落、尾声和资料来源，但正文必须以连贯段落为主。
 
-每个地点应写成一段或数段自然的中文介绍。用叙事方式交代它为什么值得看：它在城市里的位置，它连接的产业、训练、物流、水利、交通或日常生活系统，以及从公共空间能够读到的边界、流线、标识、设备、声音和时间感。
+每个主要段落都应落在一个可搜索、可抵达、可验证的具体地点或地点组上。分节标题或首句要写出地点名，例如“雅迪科技集团锡山厂区外围”“江阴苏南国际集装箱码头外的苏港路”“人民西路的梦之岛和百脑汇”，不要只写“产业园区”“港口边”“老商场”这类抽象标题。
+
+每个地点应写成一段或数段自然的中文介绍。用叙事方式交代它为什么值得看：它在城市里的位置，它连接的产业、训练、物流、水利、交通或日常生活系统，以及从公共空间能够读到的边界、流线、标识、设备、声音和时间感。写文章时可以有观察和判断，但必须给读者留下能去现场的线索：大致片区、相邻道路、外部观察点、顺路关系或合法接近方式。
 
 不要列举数据。除非用户明确要求，不要输出坐标、POI ID、评分、权重、字段名、原始分类、行政代码、电话号码、营业时间表或高德返回字段。高德 POI 和网页证据只作为内部校验依据；最终只在必要时用自然语言写出大致方位、道路、片区或合法接近方式。
 
@@ -37,6 +39,14 @@ Accept free-form Chinese or English requests. Internally identify the target cit
 
 语气应接近杂志介绍文章：有观察、有节奏、有空间感，但保持克制。避免“必去”、“宝藏”、“出片”、“网红”、“打卡”等旅游攻略式表达，也避免像报告一样机械罗列。
 
+## Writing Style
+
+写作要去 AI 化。不要用过度完整、过度对称的模板句；不要频繁使用“它不仅……也……”“这里既是……也是……”“从某种意义上说”“值得注意的是”“构成了城市肌理”这类泛化表达。少用抽象名词堆叠，多写现场可见的具体东西：门岗、围墙、公交站牌、货车入口、桥下空间、楼层招牌、旧柜台、堤岸标识、厂房编号、市场通道。
+
+文章可以有个人观察口吻，但不要装腔。句子长短要有变化，可以保留一点不整齐的地方；不要每个地点都用同样顺序写“位置-功能-观察-风险”。如果一个地点只适合路过，就用两三句话写清楚，不要硬扩成完整章节。
+
+具体地点和文章性要结合：先用高德和网页证据把地点找准，再把 POI 写成能读的段落。最终读者应该既知道“去哪里”，也知道“为什么这个地方能说明这座城市”。
+
 ## Discovery Workflow
 
 1. Parse the request into target area, route, desired categories, explicit exclusions, time budget, and transport mode.
@@ -45,7 +55,7 @@ Accept free-form Chinese or English requests. Internally identify the target cit
 4. Fetch POI candidates through AMap keyword, around, polygon, and detail APIs. Deduplicate by POI ID, name plus location, and near-identical address.
 5. Build a web evidence packet for each promising candidate. Evidence informs quality, heat, function, access, and risk; it does not replace AMap as the POI foundation.
 6. Apply hard exclusions before scoring.
-7. Score, rank, and diversify by category internally, then write a magazine-style Markdown article or route essay. Do not expose scores, POI IDs, coordinates, raw categories, or other database fields unless the user explicitly asks.
+7. Score, rank, and diversify by category internally, then write a concrete-place-driven magazine-style Markdown article or route essay. Do not expose scores, POI IDs, coordinates, raw categories, or other database fields unless the user explicitly asks.
 8. If AMap is unavailable or `AMAP_API_KEY` is missing, clearly say so in Chinese only as a short limitation note, then write a provisional magazine-style article from web evidence and keyword planning. Do not fabricate POI IDs, and do not include empty AMap fields.
 
 ## Classification System
@@ -180,7 +190,7 @@ These scores and recommendation levels are internal decision aids. In normal out
 
 ## Ranking Logic
 
-Rank internally by hard-exclusion status, score, evidence quality, AMap confidence, legal access, category diversity, and route fit. Avoid outputting many near-duplicates from the same industrial park, market cluster, or waterfront. If several POIs describe one system, merge them into one article section such as “沈家门渔港外围” and keep representative AMap POIs as internal notes rather than final-output data.
+Rank internally by hard-exclusion status, score, evidence quality, AMap confidence, legal access, category diversity, and route fit. Avoid outputting many near-duplicates from the same industrial park, market cluster, or waterfront. If several POIs describe one system, merge them into one article section with a concrete title such as “沈家门渔港外围：从滨港路看冷链和水产交易”, and keep representative AMap POIs as internal notes rather than final-output data.
 
 市场排序规则：普通农贸市场、普通批发市场、水产市场、五金市场、轻纺市场、电动车市场通常应降为“可作为路线节点”或直接省略。只有当一个市场能清楚揭示更大的城市系统时，才保留在主推荐中，例如港口周边渔业物流、冷链分拨、铁路或陆港物流、产业供应链、新老市场迁址更新、生产资料流通，并且这些内容不能被其他基础设施或产业节点更好地代表。
 
@@ -195,6 +205,7 @@ If the user asks for a route:
 - Alternate industry, street/market, infrastructure, education/culture, and low-commercial nodes.
 - Avoid stacking multiple high-fatigue or peripheral sites back-to-back.
 - Write the route as a readable day narrative, not a timetable or spreadsheet. Keep rest time and food/transport buffers implicit in the prose.
+- Keep concrete place names in the route prose. A reader should be able to follow the route by searching the named places and roads, even though the output is written like an article.
 - Mention optional detours naturally in sentences instead of marking “可跳过项” and “备选项” as rigid fields, unless the user asks for a practical itinerary.
 - For factories, ports, traffic, energy, abandoned, or semi-abandoned sites, recommend only public-road/peripheral observation unless an official open mechanism exists.
 
@@ -217,11 +228,11 @@ Use conservative safety language:
 
 ## Example Output Shape
 
-# 沈家门的早晨从港边开始
+# 沈家门渔港外围：从滨港路看一座渔业城市
 
-沈家门不适合只被写成一个“海鲜目的地”。真正有意思的部分在港区外围：清晨的货车、码头边界、冷链门头、水产市场与修船铺之间的距离，会把舟山作为渔业城市的结构露出来。沿着公共道路走，不需要进入封闭码头，也能看见渔船停靠、冰块和泡沫箱的流动、市场开门前后街面节奏的变化。
+沈家门不适合只被写成一个“海鲜目的地”。更有意思的部分在渔港外围，从滨港路一带慢慢走，货车、码头边界、冷链门头、水产市场与修船铺之间的距离，会把舟山作为渔业城市的结构露出来。沿着公共道路看，不需要进入封闭码头，也能看到渔船停靠、泡沫箱转运、市场开门前后街面节奏的变化。
 
-水产市场可以作为这一段的补充，但不应盖过港口本身。它的价值不在零售摊位，而在交易和冷链如何接上码头、餐馆、批发车辆与外运线路。如果现场已经明显转向游客消费，就把它当作路过的侧影，而不是主角。
+沈家门水产市场可以作为这一段的补充，但不应盖过港口本身。它的价值不在零售摊位，而在交易和冷链如何接上码头、餐馆、批发车辆与外运线路。如果现场已经明显转向游客消费，就把它当作路过的侧影，不必停太久。
 
 这一类地方只建议白天观察，避开封闭码头、作业通道和禁止拍摄区域。真正值得记录的是边界如何工作，而不是越过边界之后有什么。
 
