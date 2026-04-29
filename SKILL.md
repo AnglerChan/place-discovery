@@ -1,6 +1,6 @@
 ---
 name: place-discovery
-description: Discover local places and route nodes with AMap Web Service POI data plus web-search evidence. Use when Codex needs to find 城市地点, 地方产业空间, 教育训练空间, 城市系统, 基础设施景观, 低商业探索地点, AMap POI enrichment, or produce a 地点研究报告/地点路线 for a city, district, coordinate area, or travel route.
+description: Discover local places and route nodes with AMap Web Service POI data plus web-search evidence. Use when Codex needs to find 城市地点, 地方产业空间, 教育训练空间, 城市系统, 基础设施景观, 低商业探索地点, AMap POI enrichment, or produce a magazine-style 城市地点介绍文章/地点路线 for a city, district, coordinate area, or travel route.
 ---
 
 # Place Discovery
@@ -23,21 +23,19 @@ Accept free-form Chinese or English requests. Internally identify the target cit
 
 ## Output Format
 
-最终结果必须是一篇中文 Markdown 文档。不要在最终结果中追加 JSON、YAML、代码块、字段字典、机器可读 schema 或其他数据结构。
+最终结果必须是一篇中文 Markdown 杂志介绍文章。不要在最终结果中追加 JSON、YAML、代码块、字段字典、机器可读 schema 或其他数据结构。
 
-每个地点应写成简短的中文地点研究条目，可按需要包含这些部分：
+文章应像城市杂志、地方观察专栏或专题导览，而不是数据库清单、攻略表格、评分报告或 POI 导出。可以有标题、导语、分节小标题、路线段落、尾声和资料来源，但正文必须以连贯段落为主。
 
-- 类型：一级分类和细分类.
-- 推荐等级：强推荐、推荐、可作为路线节点、谨慎推荐、剔除.
-- 建议方式：合法接近方式和观察方法.
-- 推荐理由：说明地点的真实功能、产业痕迹、基础设施价值、训练研究价值或低商业空间价值.
-- 观察重点：公共空间中可以合法观察的物件、流线、边界、标识、设备或景观结构.
-- 排除风险：说明文旅包装、普通消费主导、不安全进入、敏感区域或开放性不明等问题.
-- 安全提示：用保守语气说明安全和合法边界.
-- AMap：有高德信息时，用普通中文写出名称、地址、坐标和 POI ID.
-- 证据：当证据影响纳入、剔除、开放状态或风险判断时，引用公开官方或高质量来源.
+每个地点应写成一段或数段自然的中文介绍。用叙事方式交代它为什么值得看：它在城市里的位置，它连接的产业、训练、物流、水利、交通或日常生活系统，以及从公共空间能够读到的边界、流线、标识、设备、声音和时间感。
 
-语气应接近地点研究报告，避免“必去”、“宝藏”、“出片”、“网红”、“打卡”等旅游攻略式表达。
+不要列举数据。除非用户明确要求，不要输出坐标、POI ID、评分、权重、字段名、原始分类、行政代码、电话号码、营业时间表或高德返回字段。高德 POI 和网页证据只作为内部校验依据；最终只在必要时用自然语言写出大致方位、道路、片区或合法接近方式。
+
+不要使用固定字段块，例如“类型 / 推荐等级 / 建议方式 / 推荐理由 / 观察重点 / 排除风险 / AMap”。如果需要表达安全边界，把它写进段落里，例如“这里适合白天沿公共道路看，厂区内部不要进入”。
+
+证据引用应轻量出现。只有当证据影响纳入、剔除、开放状态或风险判断时，在段落中自然挂接链接，或在文末用“资料来源”列出少量公开官方或高质量来源。不要把证据写成逐项审计表。
+
+语气应接近杂志介绍文章：有观察、有节奏、有空间感，但保持克制。避免“必去”、“宝藏”、“出片”、“网红”、“打卡”等旅游攻略式表达，也避免像报告一样机械罗列。
 
 ## Discovery Workflow
 
@@ -47,8 +45,8 @@ Accept free-form Chinese or English requests. Internally identify the target cit
 4. Fetch POI candidates through AMap keyword, around, polygon, and detail APIs. Deduplicate by POI ID, name plus location, and near-identical address.
 5. Build a web evidence packet for each promising candidate. Evidence informs quality, heat, function, access, and risk; it does not replace AMap as the POI foundation.
 6. Apply hard exclusions before scoring.
-7. Score, rank, diversify by category, and produce a Markdown report or route output.
-8. If AMap is unavailable or `AMAP_API_KEY` is missing, clearly say so in Chinese and output a prose keyword search plan plus any web-evidence-only candidates as provisional, without fabricating POI IDs.
+7. Score, rank, and diversify by category internally, then write a magazine-style Markdown article or route essay. Do not expose scores, POI IDs, coordinates, raw categories, or other database fields unless the user explicitly asks.
+8. If AMap is unavailable or `AMAP_API_KEY` is missing, clearly say so in Chinese only as a short limitation note, then write a provisional magazine-style article from web evidence and keyword planning. Do not fabricate POI IDs, and do not include empty AMap fields.
 
 ## Classification System
 
@@ -141,7 +139,7 @@ Use only public titles/snippets/visible pages. Do not bypass platform limits, sc
 
 ## Scoring System
 
-Start from 0 and add/subtract signals; cap final visible scores to 0-100. Remove hard-excluded places before scoring.
+Start from 0 and add/subtract signals; cap internal scores to 0-100. Remove hard-excluded places before scoring.
 
 Add:
 
@@ -178,9 +176,11 @@ Recommendation levels:
 - Below 40: 不推荐, normally omit from final results
 - Any hard exclusion: 剔除
 
+These scores and recommendation levels are internal decision aids. In normal output, translate them into editorial emphasis: lead with the strongest anchors, place weaker nodes as passing references or optional detours, and omit below-threshold places. Do not show numeric scores or recommendation labels unless the user explicitly asks for a technical audit.
+
 ## Ranking Logic
 
-Rank by hard-exclusion status, score, evidence quality, AMap confidence, legal access, category diversity, and route fit. Avoid outputting many near-duplicates from the same industrial park, market cluster, or waterfront. If several POIs describe one system, merge them into one candidate such as “沈家门渔港外围” and list representative AMap POIs.
+Rank internally by hard-exclusion status, score, evidence quality, AMap confidence, legal access, category diversity, and route fit. Avoid outputting many near-duplicates from the same industrial park, market cluster, or waterfront. If several POIs describe one system, merge them into one article section such as “沈家门渔港外围” and keep representative AMap POIs as internal notes rather than final-output data.
 
 市场排序规则：普通农贸市场、普通批发市场、水产市场、五金市场、轻纺市场、电动车市场通常应降为“可作为路线节点”或直接省略。只有当一个市场能清楚揭示更大的城市系统时，才保留在主推荐中，例如港口周边渔业物流、冷链分拨、铁路或陆港物流、产业供应链、新老市场迁址更新、生产资料流通，并且这些内容不能被其他基础设施或产业节点更好地代表。
 
@@ -194,8 +194,8 @@ If the user asks for a route:
 - Prefer 顺路 over quantity.
 - Alternate industry, street/market, infrastructure, education/culture, and low-commercial nodes.
 - Avoid stacking multiple high-fatigue or peripheral sites back-to-back.
-- Keep rest time and food/transport buffers implicit in the schedule.
-- Mark “可跳过项” and “备选项”.
+- Write the route as a readable day narrative, not a timetable or spreadsheet. Keep rest time and food/transport buffers implicit in the prose.
+- Mention optional detours naturally in sentences instead of marking “可跳过项” and “备选项” as rigid fields, unless the user asks for a practical itinerary.
 - For factories, ports, traffic, energy, abandoned, or semi-abandoned sites, recommend only public-road/peripheral observation unless an official open mechanism exists.
 
 ## Safety and Legality
@@ -217,26 +217,13 @@ Use conservative safety language:
 
 ## Example Output Shape
 
-# 舟山地点候选
+# 沈家门的早晨从港边开始
 
-## 1. 沈家门渔港外围
+沈家门不适合只被写成一个“海鲜目的地”。真正有意思的部分在港区外围：清晨的货车、码头边界、冷链门头、水产市场与修船铺之间的距离，会把舟山作为渔业城市的结构露出来。沿着公共道路走，不需要进入封闭码头，也能看见渔船停靠、冰块和泡沫箱的流动、市场开门前后街面节奏的变化。
 
-类型：城市系统 / 港口与渔业
-推荐等级：强推荐
-建议方式：公共道路外围观察，适合作为路线节点
-推荐理由：这里保留渔港、冷链、水产交易、船舶停靠等真实功能，能体现舟山的渔业城市结构。
-观察重点：渔船、冷链车辆、水产市场、港区边界、地方招牌。
-排除风险：不进入封闭码头，不拍摄明确禁止拍摄区域。
-AMap：名称、地址、经纬度、POI ID、类型
+水产市场可以作为这一段的补充，但不应盖过港口本身。它的价值不在零售摊位，而在交易和冷链如何接上码头、餐馆、批发车辆与外运线路。如果现场已经明显转向游客消费，就把它当作路过的侧影，而不是主角。
 
-## 辅助节点：沈家门水产市场
-
-类型：城市系统 / 水产交易
-推荐等级：可作为路线节点
-建议方式：只在白天开放时段观察公共交易区。
-推荐理由：可补充理解渔港供应链，但普通市场属性较强，不应压过港口、码头、冷链、船厂等主节点。
-观察重点：水产交易、冷链车辆、市场与港区之间的物流关系。
-排除风险：如果现场以零售消费为主，或商业包装强，应降级或跳过。
+这一类地方只建议白天观察，避开封闭码头、作业通道和禁止拍摄区域。真正值得记录的是边界如何工作，而不是越过边界之后有什么。
 
 ## Extensible Configuration
 
