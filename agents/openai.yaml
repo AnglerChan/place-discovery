@@ -1,0 +1,4 @@
+interface:
+  display_name: "地点发现"
+  short_description: "发现城市系统、地方产业、教育训练空间和低商业探索地点"
+  default_prompt: "Use $place-discovery to build a place report for a city, district, or route."
