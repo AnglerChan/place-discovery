@@ -1,15 +1,63 @@
 # place-discovery
 
-Codex skill for discovering city places with real local function: industry spaces, training and research spaces, infrastructure landscapes, city systems, and low-commercial exploration nodes.
+一个用于 Codex 的地点发现 skill。它帮助从城市里找出更有真实功能的空间：产业园区、工厂外围、职业训练系统、港口与物流、水利与交通基础设施、低商业包装的湿地/河堤/老商业空间等。
 
-## Contents
+它不是旅游攻略生成器。目标不是列出热门景点，而是把一座城市的产业、交通、水系、教育和日常运行方式写成可读的地点介绍。
 
-- `SKILL.md`: skill instructions and output rules.
-- `scripts/amap_client.py`: AMap Web Service helper. It reads `AMAP_API_KEY` from the environment, or a local `.amap_api_key` file that is intentionally ignored by Git.
-- `references/place_taxonomy.json`: categories, keywords, exclusions, and score weights.
-- `agents/openai.yaml`: skill display metadata.
+## 特点
 
-## Notes
+- 以高德 Web Service POI 作为地点底层校验。
+- 用公开网页证据补充开放状态、功能属性、风险和包装程度判断。
+- 内置地点分类、关键词、排除词和评分规则。
+- 避开普通旅游动线、红色叙事景点、过度文旅包装空间和不安全/非法进入场所。
+- 默认输出中文 Markdown 杂志式文章，而不是坐标表、POI 清单或评分表。
 
-Do not commit API keys. Put a local key in `.amap_api_key` or export `AMAP_API_KEY` before using the AMap helper.
+## 适合的请求
 
+```text
+帮我找舟山适合探索的地点
+无锡两天，想看产业、老商场、湿地和基础设施
+杭州不要西湖、不要武康路那种地方，想看高校、厂区和城市边界
+从无锡到舟山自驾，沿路找地点
+```
+
+## 输出风格
+
+最终输出应像城市杂志、地方观察专栏或专题导览。正文以连贯段落为主，写清地点与城市系统的关系，例如产业痕迹、交通流线、水利边界、训练空间、存量商业状态和合法观察方式。
+
+默认不展示坐标、POI ID、评分、权重、字段名、行政代码、原始分类或高德返回字段。这些数据只用于内部筛选和校验。除非用户明确要求，最终文章不应写成“类型 / 推荐等级 / AMap / 观察重点”的固定字段块。
+
+## 文件结构
+
+- `SKILL.md`：skill 主说明，包含发现流程、筛选规则、输出规范和安全边界。
+- `scripts/amap_client.py`：高德 Web Service 辅助脚本。
+- `references/place_taxonomy.json`：分类、关键词、排除词、城市产业扩展和评分权重。
+- `agents/openai.yaml`：skill 展示元数据。
+
+## 高德 API 配置
+
+脚本会按以下顺序读取 API key：
+
+1. 环境变量 `AMAP_API_KEY`
+2. skill 目录下的本地文件 `.amap_api_key`
+
+`.amap_api_key` 已加入 `.gitignore`，不要提交 API key。
+
+示例：
+
+```bash
+export AMAP_API_KEY="your-amap-key"
+python3 scripts/amap_client.py district 无锡 --extensions all
+python3 scripts/amap_client.py search 物联网 --city 无锡 --city-limit --limit 20
+python3 scripts/amap_client.py detail B0XXXX
+```
+
+如果没有高德 key，skill 仍可用公开网页证据做临时判断，但不能伪造 POI ID 或坐标。
+
+## 安全边界
+
+这个 skill 只推荐合法、保守的观察方式，例如公共道路、开放步道、市场公共区域、校园公共区域、官方展厅或预约参观机制。它不会建议翻墙、进入锁闭建筑、穿越铁路/高速/施工区、靠近敏感生产核心或拍摄明确禁止拍摄的区域。
+
+## 许可证
+
+未指定。使用前请根据仓库用途补充许可证文件。
