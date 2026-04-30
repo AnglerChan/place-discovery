@@ -1,6 +1,6 @@
 ---
 name: place-discovery
-description: Discover local places and route nodes with AMap Web Service POI data plus web-search evidence. Use when Codex needs to find 城市地点, 地方产业空间, 教育训练空间, 城市系统, 基础设施景观, 低商业探索地点, AMap POI enrichment, or produce a concrete-place-driven magazine-style 城市地点介绍文章/地点路线 for a city, district, coordinate area, or travel route.
+description: Discover local places and route nodes with AMap Web Service POI data plus web-search evidence. Use when an agent needs to find 城市地点, 地方产业空间, 教育训练空间, 城市系统, 基础设施景观, 低商业探索地点, AMap POI enrichment, or produce a concrete-place-driven magazine-style 城市地点介绍文章/地点路线 for a city, district, coordinate area, or travel route.
 ---
 
 # Place Discovery
@@ -15,7 +15,7 @@ Prefer places that can be understood from public roads, open spaces, official ex
 
 - Use `scripts/amap_client.py` for AMap Web Service calls. It reads only `AMAP_API_KEY`; never hardcode keys.
 - Load `references/place_taxonomy.json` when you need the full keyword library, exclusion terms, score weights, or category configuration.
-- Use Codex web search as the default evidence layer. Keep `SearchEvidenceProvider` as an abstraction so another search API can replace it later.
+- Use the current agent's available web search as the default evidence layer. Keep `SearchEvidenceProvider` as an abstraction so another search API can replace it later.
 
 ## Input Handling
 
@@ -130,7 +130,7 @@ class SearchEvidenceProvider:
         """Return public search-result metadata: title, url, snippet, source_type."""
 ```
 
-Default provider: Codex built-in web search. Future adapters can implement Brave, Bocha, Tavily, SerpAPI, or a private search service without changing the output schema.
+Default provider: the current agent's available web search. Future adapters can implement Brave, Bocha, Tavily, SerpAPI, or a private search service without changing the output schema.
 
 For each candidate, search in this order:
 
@@ -226,22 +226,12 @@ Use conservative safety language:
 - “杭州不要西湖、不要武康路那种地方，想看高校、厂区和城市边界”
 - “从无锡到舟山自驾，沿路找地点”
 
-## Example Output Shape
-
-# 沈家门渔港外围：从滨港路看一座渔业城市
-
-沈家门不适合只被写成一个“海鲜目的地”。更有意思的部分在渔港外围，从滨港路一带慢慢走，货车、码头边界、冷链门头、水产市场与修船铺之间的距离，会把舟山作为渔业城市的结构露出来。沿着公共道路看，不需要进入封闭码头，也能看到渔船停靠、泡沫箱转运、市场开门前后街面节奏的变化。
-
-沈家门水产市场可以作为这一段的补充，但不应盖过港口本身。它的价值不在零售摊位，而在交易和冷链如何接上码头、餐馆、批发车辆与外运线路。如果现场已经明显转向游客消费，就把它当作路过的侧影，不必停太久。
-
-这一类地方只建议白天观察，避开封闭码头、作业通道和禁止拍摄区域。真正值得记录的是边界如何工作，而不是越过边界之后有什么。
-
 ## Extensible Configuration
 
 Keep these adjustable without rewriting the skill:
 
 - `AMAP_API_KEY`: environment variable for AMap Web Service.
-- `SearchEvidenceProvider`: adapter for Codex web search now; Brave/Bocha/Tavily/SerpAPI later.
+- `SearchEvidenceProvider`: adapter for the current agent's web search now; Brave/Bocha/Tavily/SerpAPI later.
 - `references/place_taxonomy.json`: categories, keywords, city-industry expansions, negative terms, hard exclusions, score weights.
 - Result limits: default 12 report candidates, 3-6 route nodes per day.
 - Evidence depth: `standard` for quick reports, `deep` for more source checking.
